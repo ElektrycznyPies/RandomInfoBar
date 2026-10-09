@@ -1,4 +1,4 @@
-# Random Info Bar 1.0 #
+# Random Info Bar # 1.1 #
 
 	Add-Type -AssemblyName System.Windows.Forms
 	Add-Type -AssemblyName System.Drawing
@@ -9,45 +9,49 @@
 	$s = @{
 		netText = ""
 		netSymbol = ""
+		windowX = 0
+		windowY = 0
+		formMaxX = 600
+		formMaxY = 22
+		offsetY = 0
 	}
 	
-	$formMaxX = 600
-	$formMaxY = 20
 	$interval = 60000
 
-	# Właściwości okna
+	# Form properties
 	$form.Text = "Random Info Bar"
-	$form.ClientSize=New-Object System.Drawing.Size($formMaxX,$formMaxY)
 	$form.StartPosition = "Manual"
+	$form.Size = New-Object System.Drawing.Size($s.formMaxX, $s.formMaxY)
+	$form.MaximumSize = New-Object System.Drawing.Size($s.formMaxX, $s.formMaxY)
+	$form.MinimumSize = New-Object System.Drawing.Size($s.formMaxX, $s.formMaxY)
+	$form.Margin = New-Object System.Windows.Forms.Padding(0)
 	$form.FormBorderStyle = "None"
 	$form.MaximizeBox = $false
 	$form.BackColor = [System.Drawing.Color]::Black
 	$form.Opacity = 0.8
 	$form.TopMost = $true
 	$form.ShowInTaskbar = $false
-
-		# ToolWindow style forced w/o frames: hidden tool window
-		$owner = New-Object System.Windows.Forms.Form
-		$owner.FormBorderStyle = "None"
-		$owner.Size = New-Object System.Drawing.Size(0, 0)
-		$owner.ShowInTaskbar = $false
-		# Przypisanie właściciela
-		$form.Owner = $owner
-
+	#$form.AutoScaleMode = [System.Windows.Forms.AutoScaleMode]::None
+		
 	# Properties of text in the bar
 	$label = New-Object System.Windows.Forms.Label
-	$label.Size = "$formMaxX, $formMaxY"
+	$label.Size = New-Object System.Drawing.Size($s.formMaxX, $s.formMaxY)
+	$label.Margin = New-Object System.Windows.Forms.Padding(0)
+	$label.Padding = New-Object System.Windows.Forms.Padding(0)
+	$label.Dock = [System.Windows.Forms.DockStyle]::Fill
 	$label.TextAlign = "MiddleCenter"
 	$label.ForeColor = "White"
-	$label.Font = New-Object System.Drawing.Font("Helvetica", 16)
+	$label.Font = New-Object System.Drawing.Font("Helvetica", 15)
+	#$label.Dock = [System.Windows.Forms.DockStyle]::Fill
+	
 	$form.Controls.Add($label)
 	
 		# First call of window with labels, otherwise pos. would be 0,0
-		$windowX = Get-Random -Minimum 0 -Maximum ($bounds.Width - $formMaxX)
-		$windowY = $bounds.Height - $formMaxY
+		$s.windowX = Get-Random -Minimum 0 -Maximum ($bounds.Width - $s.formMaxX)
+		$s.windowY = $bounds.Height - $s.formMaxY - $s.offsetY
 		$label.Text = Get-Date -Format "[ HH:mm:ss ]  |  dddd, d MMMM yyyy"
 		$s.netText = "net check"
-		$form.Location = New-Object System.Drawing.Point($windowX, $windowY)
+		$form.Location = New-Object System.Drawing.Point($s.windowX, $s.windowY)
 
 	# Timer to update network
 	$timerNet = New-Object System.Windows.Forms.Timer
@@ -59,7 +63,7 @@
 
 		if (-not $activeAdapters) {
 			$s.netText = "NO NET" 
-			$s.netSymbol = "⇓"
+			$s.netSymbol = "*"
 		} else {
 			foreach ($adapter in $activeAdapters) {
 				$connectionType = switch ([int]$adapter.InterfaceType) {
@@ -70,10 +74,9 @@
 					Default { "OTHER: ($($adapter.InterfaceType))" }
 				}
 
-			#Write-Host "Aktywne połączenie: $connectionType [$($adapter.Name)]" -ForegroundColor Green
-			#$s.netText = "$connectionType [ $($adapter.Name) ]"
+			# [$($adapter.Name)] gives adapter name :)
 			$s.netText = "$connectionType"
-			$s.netSymbol = "⇑"
+			$s.netSymbol = "^"
 			}
 		}
 	})
@@ -84,9 +87,9 @@
 	$timer.Interval = $interval
 	$timer.Add_Tick({
 
-		$windowX = Get-Random -Minimum 0 -Maximum ($bounds.Width - $formMaxX)
-		$windowY = $bounds.Height - $formMaxY
-		$form.Location = New-Object System.Drawing.Point($windowX, $windowY)
+		$s.windowX = Get-Random -Minimum 0 -Maximum ($bounds.Width - $s.formMaxX)
+		$s.windowY = $bounds.Height - $s.formMaxY - $s.offsetY
+		$form.Location = New-Object System.Drawing.Point($s.windowX, $s.windowY)
 
 		})
 
@@ -100,10 +103,12 @@
 		
 	})
 	
+
 $timer.Start()
 $timerSeconds.Start()
 $timerNet.Start()
 $form.ShowDialog()
+
 $timer.Stop()
 $timerSeconds.Stop()
 $timerNet.Stop()
