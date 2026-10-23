@@ -1,9 +1,27 @@
-# Random Info Bar # 1.1 #
+# Random Info Bar # 1.2 #
 
 	Add-Type -AssemblyName System.Windows.Forms
 	Add-Type -AssemblyName System.Drawing
 
+	function Set-Hover {
+		param (
+			[System.Windows.Forms.Button]$ButtonObject,
+			[switch] $MouseEnter
+		)
+		if ($MouseEnter) {
+			$bkColor = '#990000'
+			$fgColor = '#000000'
+		}
+		else {
+			$bkColor = '#000000'
+			$fgColor = '#FFFFFF'
+		}
+		$ButtonObject.BackColor = $bkColor
+		$ButtonObject.ForeColor = $fgColor
+	}
+
 	$form = New-Object System.Windows.Forms.Form
+	$moveBtn = New-Object System.Windows.Forms.Button
 	$bounds = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
 	
 	$s = @{
@@ -12,11 +30,12 @@
 		windowX = 0
 		windowY = 0
 		formMaxX = 600
-		formMaxY = 22
-		offsetY = 0
+		formMaxY = 24  # Less than 24 offsets move button click area to the left
+		btnWidth = 25
+		offsetY = 0 
 	}
 	
-	$interval = 60000
+	$interval = 60000 # 60000 = 1 minute
 
 	# Form properties
 	$form.Text = "Random Info Bar"
@@ -28,23 +47,62 @@
 	$form.FormBorderStyle = "None"
 	$form.MaximizeBox = $false
 	$form.BackColor = [System.Drawing.Color]::Black
-	$form.Opacity = 0.8
+	#$form.Opacity = 0.8
+	$form.Opacity = 1
 	$form.TopMost = $true
 	$form.ShowInTaskbar = $false
 	#$form.AutoScaleMode = [System.Windows.Forms.AutoScaleMode]::None
-		
+
+	# Move button properties
+	$moveBtn.Location = New-Object System.Drawing.Point(($s.formMaxX - $s.btnWidth), 0)
+	$moveBtn.Text = "|||"
+	$moveBtn.Size = New-Object System.Drawing.Size($s.btnWidth,$s.formMaxY)
+	$moveBtn.FlatStyle = 'Flat'
+	$moveBtn.FlatAppearance.BorderSize = 0
+	$moveBtn.FlatAppearance.MouseDownBackColor = $moveBtn.BackColor
+	$moveBtn.FlatAppearance.MouseOverBackColor = $moveBtn.BackColor
+	$moveBtn.BackColor = '#000000'
+	$moveBtn.ForeColor = '#FFFFFF'
+	$moveBtn.TabStop = $false
+	$moveBtn.Add_MouseEnter({ Set-Hover -ButtonObject $this -MouseEnter })
+	$moveBtn.Add_MouseLeave({ Set-Hover -ButtonObject $this })
+	$moveBtn.Add_MouseDown({
+		if ($_.Button -eq [System.Windows.Forms.MouseButtons]::Left)
+		{
+			$script:dragging = $true
+			$script:startMouseX = [System.Windows.Forms.Cursor]::Position.X
+			$script:startFormX  = $form.Left
+		}
+	})
+	$moveBtn.Add_MouseMove({
+		if ($script:dragging)
+		{
+			$currentX = [System.Windows.Forms.Cursor]::Position.X
+			$deltaX = $currentX - $script:startMouseX
+			$form.Left = $script:startFormX + $deltaX
+
+			# Top pozostaje bez zmian
+		}
+	})
+	$moveBtn.Add_MouseUp({
+		$script:dragging = $false
+		$form.ActiveControl = $null
+	})
+
+
 	# Properties of text in the bar
 	$label = New-Object System.Windows.Forms.Label
 	$label.Size = New-Object System.Drawing.Size($s.formMaxX, $s.formMaxY)
 	$label.Margin = New-Object System.Windows.Forms.Padding(0)
 	$label.Padding = New-Object System.Windows.Forms.Padding(0)
-	$label.Dock = [System.Windows.Forms.DockStyle]::Fill
 	$label.TextAlign = "MiddleCenter"
 	$label.ForeColor = "White"
 	$label.Font = New-Object System.Drawing.Font("Helvetica", 15)
-	#$label.Dock = [System.Windows.Forms.DockStyle]::Fill
+	
 	
 	$form.Controls.Add($label)
+	$form.Controls.Add($moveBtn)
+	$moveBtn.BringToFront()
 	
 		# First call of window with labels, otherwise pos. would be 0,0
 		$s.windowX = Get-Random -Minimum 0 -Maximum ($bounds.Width - $s.formMaxX)
@@ -57,7 +115,7 @@
 	$timerNet = New-Object System.Windows.Forms.Timer
 	$timerNet.Interval = 1500
 	$timerNet.Add_Tick({
-	
+
 	# Network state
 	$activeAdapters = Get-NetAdapter -Physical | Where-Object { $_.Status -eq 'Up' }
 
