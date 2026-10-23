@@ -47,8 +47,7 @@
 	$form.FormBorderStyle = "None"
 	$form.MaximizeBox = $false
 	$form.BackColor = [System.Drawing.Color]::Black
-	#$form.Opacity = 0.8
-	$form.Opacity = 1
+	$form.Opacity = 0.8
 	$form.TopMost = $true
 	$form.ShowInTaskbar = $false
 	#$form.AutoScaleMode = [System.Windows.Forms.AutoScaleMode]::None
