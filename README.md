@@ -5,6 +5,7 @@ The bar has a black, partially transparent background and moves to a random posi
 - Time with seconds, day of the week and date.
 - Physical network connection status: Ethernet, Wi-Fi, cellular or disconnected.
 - Always-on-top window, without borders or a taskbar button.
+- Move button to move the bar away in case it obscures something important.
 - Can run automatically at logon through Windows Task Scheduler.
 
 **Task Scheduler** setup:
