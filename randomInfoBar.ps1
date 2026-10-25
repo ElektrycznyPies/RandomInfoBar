@@ -1,4 +1,4 @@
-# Random Info Bar # 1.2 #
+# Random Info Bar # 1.3 #
 
 	Add-Type -AssemblyName System.Windows.Forms
 	Add-Type -AssemblyName System.Drawing
@@ -9,12 +9,12 @@
 			[switch] $MouseEnter
 		)
 		if ($MouseEnter) {
-			$bkColor = '#990000'
+			$bkColor = '#FF0000'
 			$fgColor = '#000000'
 		}
 		else {
 			$bkColor = '#000000'
-			$fgColor = '#FFFFFF'
+			$fgColor = '#FF0000'
 		}
 		$ButtonObject.BackColor = $bkColor
 		$ButtonObject.ForeColor = $fgColor
@@ -27,15 +27,16 @@
 	$s = @{
 		netText = ""
 		netSymbol = ""
+		btnSymbol = "|||" # find line if ($s.windowX -gt -($s.formMaxX/2))... to change button symbols
 		windowX = 0
 		windowY = 0
 		formMaxX = 600
 		formMaxY = 24  # Less than 24 offsets move button click area to the left
 		btnWidth = 25
-		offsetY = 1  # Shows 1 px above the bottom to enable hidden Taskbar popping up when mouse at the bottom
+		offsetY = 1 
 	}
 	
-	$interval = 60000 # 60000 = 1 minute
+	$interval = 45000 # 60000 = 1 minute
 
 	# Form properties
 	$form.Text = "Random Info Bar"
@@ -54,15 +55,15 @@
 
 	# Move button properties
 	$moveBtn.Location = New-Object System.Drawing.Point(($s.formMaxX - $s.btnWidth), 0)
-	$moveBtn.Text = "|||"
 	$moveBtn.Size = New-Object System.Drawing.Size($s.btnWidth,$s.formMaxY)
 	$moveBtn.FlatStyle = 'Flat'
 	$moveBtn.FlatAppearance.BorderSize = 0
 	$moveBtn.FlatAppearance.MouseDownBackColor = $moveBtn.BackColor
 	$moveBtn.FlatAppearance.MouseOverBackColor = $moveBtn.BackColor
 	$moveBtn.BackColor = '#000000'
-	$moveBtn.ForeColor = '#FFFFFF'
+	$moveBtn.ForeColor = '#FF0000'
 	$moveBtn.TabStop = $false
+	$moveBtn.Text = "|||"
 	$moveBtn.Add_MouseEnter({ Set-Hover -ButtonObject $this -MouseEnter })
 	$moveBtn.Add_MouseLeave({ Set-Hover -ButtonObject $this })
 	$moveBtn.Add_MouseDown({
@@ -78,9 +79,9 @@
 		{
 			$currentX = [System.Windows.Forms.Cursor]::Position.X
 			$deltaX = $currentX - $script:startMouseX
-			$form.Left = $script:startFormX + $deltaX
-
-			# Top pozostaje bez zmian
+			$s.windowX = $script:startFormX + $deltaX
+			$form.Left = $s.windowX
+			if ($s.windowX -gt -($s.formMaxX/2)) { $moveBtn.Text = "|||" } else { $moveBtn.Text = "◼" }
 		}
 	})
 	$moveBtn.Add_MouseUp({
@@ -102,7 +103,7 @@
 	$form.Controls.Add($label)
 	$form.Controls.Add($moveBtn)
 	$moveBtn.BringToFront()
-	
+
 		# First call of window with labels, otherwise pos. would be 0,0
 		$s.windowX = Get-Random -Minimum 0 -Maximum ($bounds.Width - $s.formMaxX)
 		$s.windowY = $bounds.Height - $s.formMaxY - $s.offsetY
@@ -128,7 +129,7 @@
 					71      { "WI-FI" }
 					243     { "GSM" }
 					244     { "GSM" }
-					Default { "($($adapter.InterfaceType))" }
+					Default { "OTHER: ($($adapter.InterfaceType))" }
 				}
 
 			# [$($adapter.Name)] gives adapter name :)
@@ -143,9 +144,13 @@
 	$timer = New-Object System.Windows.Forms.Timer
 	$timer.Interval = $interval
 	$timer.Add_Tick({
+
+		if ($s.windowX -gt -($s.formMaxX/2)) { 
+	
 		$s.windowX = Get-Random -Minimum 0 -Maximum ($bounds.Width - $s.formMaxX)
 		$s.windowY = $bounds.Height - $s.formMaxY - $s.offsetY
 		$form.Location = New-Object System.Drawing.Point($s.windowX, $s.windowY)
+		} else { Write-Host "Poza o połowę i więcej" }   ################################
 		})
 
 	# Timer to update time
