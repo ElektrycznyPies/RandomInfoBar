@@ -80,8 +80,9 @@
 			$currentX = [System.Windows.Forms.Cursor]::Position.X
 			$deltaX = $currentX - $script:startMouseX
 			$s.windowX = $script:startFormX + $deltaX
+			if ($s.windowX -lt -($s.formMaxX - $s.btnWidth)) { $s.windowX = -($s.formMaxX - $s.btnWidth) }
+			if ($s.windowX -gt -($s.formMaxX/2)) { $moveBtn.Text = "|||" } else { $moveBtn.Text = "[ ]" }
 			$form.Left = $s.windowX
-			if ($s.windowX -gt -($s.formMaxX/2)) { $moveBtn.Text = "|||" } else { $moveBtn.Text = "◼" }
 		}
 	})
 	$moveBtn.Add_MouseUp({
@@ -145,13 +146,12 @@
 	$timer.Interval = $interval
 	$timer.Add_Tick({
 
-		if ($s.windowX -gt -($s.formMaxX/2)) { 
-	
+		if ($s.windowX -gt -([math]::Round($s.formMaxX / 3))) {
 		$s.windowX = Get-Random -Minimum 0 -Maximum ($bounds.Width - $s.formMaxX)
 		$s.windowY = $bounds.Height - $s.formMaxY - $s.offsetY
 		$form.Location = New-Object System.Drawing.Point($s.windowX, $s.windowY)
-		} else { Write-Host "Poza o połowę i więcej" }   ################################
-		})
+		}
+	})
 
 	# Timer to update time
 	$timerSeconds = New-Object System.Windows.Forms.Timer
