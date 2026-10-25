@@ -32,7 +32,7 @@
 		formMaxX = 600
 		formMaxY = 24  # Less than 24 offsets move button click area to the left
 		btnWidth = 25
-		offsetY = 0 
+		offsetY = 1  # Shows 1 px above the bottom to enable hidden Taskbar popping up when mouse at the bottom
 	}
 	
 	$interval = 60000 # 60000 = 1 minute
@@ -128,7 +128,7 @@
 					71      { "WI-FI" }
 					243     { "GSM" }
 					244     { "GSM" }
-					Default { "OTHER: ($($adapter.InterfaceType))" }
+					Default { "($($adapter.InterfaceType))" }
 				}
 
 			# [$($adapter.Name)] gives adapter name :)
@@ -143,21 +143,17 @@
 	$timer = New-Object System.Windows.Forms.Timer
 	$timer.Interval = $interval
 	$timer.Add_Tick({
-
 		$s.windowX = Get-Random -Minimum 0 -Maximum ($bounds.Width - $s.formMaxX)
 		$s.windowY = $bounds.Height - $s.formMaxY - $s.offsetY
 		$form.Location = New-Object System.Drawing.Point($s.windowX, $s.windowY)
-
 		})
 
 	# Timer to update time
 	$timerSeconds = New-Object System.Windows.Forms.Timer
 	$timerSeconds.Interval = 100
 	$timerSeconds.Add_Tick({
-		
 		$dateText = Get-Date -Format "[ HH:mm:ss ]     dddd, d MMMM yyyy" 
 		$label.Text = "$dateText    $($s.netSymbol) $($s.netText) $($s.netSymbol)"
-		
 	})
 	
 
